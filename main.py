@@ -7,6 +7,7 @@ import requests
 import time
 import csv
 import pandas as pd
+import os
 
 ## Some basic configurations at the beginning
 # < ----- Site to use for the flats search and data scraping ----- >
@@ -32,6 +33,7 @@ sq_m = [prop.select("div.mt-10.chars.grey span")[1].getText().strip().strip(" м
 addresses = [prop.select_one("h2.tit a").getText().strip() for prop in property_list]
 districts = []
 subway_stations = []
+hrefs_for_master = []
 hrefs = []
 
 for prop in property_list:
@@ -52,8 +54,9 @@ for prop in property_list:
     else:
         link = prop.select_one("h2.tit a").get("href")
     hrefs.append(link)
+    hrefs_for_master.append(link)
 
-master_list = [prices, sq_m, addresses, districts, subway_stations, hrefs]
+master_list = [prices, sq_m, addresses, districts, subway_stations, hrefs_for_master]
 
 # < ----- Verify whether there is no duplicate postings being made to the DTB
 #         and post only unique entries of flats found on the site ----- >
@@ -77,14 +80,14 @@ else:
                    "Metro Station Nearby", "Link"]
     writer_dict_obj = csv.DictWriter(file, fieldnames=field_names)
 finally:
-    for n in range(len(master_list[0])):
+    for n in range(len(master_list[-1])):
         row_to_write = {field_names[field]: master_list[field][n] for field in range(len(field_names))}
         writer_dict_obj.writerow(row_to_write)
     file.close()
 
 ## Selenium google form data entry automation
 # < ----- Activate Selenium ----- >
-SELENIUM_DRIVER_PATH = "C:/development/chromedriver_win32/chromedriver"
+SELENIUM_DRIVER_PATH = os.environ.get("SELENIUM_DRIVER_PATH")
 service = ChromeService(executable_path=SELENIUM_DRIVER_PATH)
 chrome_options = Options()
 chrome_options.add_experimental_option("detach", True)
