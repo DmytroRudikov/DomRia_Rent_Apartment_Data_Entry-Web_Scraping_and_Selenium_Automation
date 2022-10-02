@@ -13,7 +13,7 @@ import os
 # < ----- Site to use for the flats search and data scraping ----- >
 dom_source = "https://dom.ria.com/uk/arenda-kvartir/kiev-1k/"
 # < ----- Path to google-form to complete ----- >
-google_form = "https://docs.google.com/forms/d/e/1FAIpQLSdhH9cdn-OJVMXtLTZLJJ7EZGJXP7BvrJTpQIiyF7KeRUAfRA/viewform?usp=sf_link"
+google_form = os.getenv("GOOGLE_FORM")
 
 ## Project start
 # < ----- Parse Dom.Ria site to find 1-room apartments for rent in Kyiv ----- >
@@ -86,30 +86,33 @@ finally:
     file.close()
 
 ## Selenium google form data entry automation
-# < ----- Activate Selenium ----- >
-SELENIUM_DRIVER_PATH = os.environ.get("SELENIUM_DRIVER_PATH")
-service = ChromeService(executable_path=SELENIUM_DRIVER_PATH)
-chrome_options = Options()
-chrome_options.add_experimental_option("detach", True)
-driver = webdriver.Chrome(service=service, options=chrome_options)
+if len(master_list[0]) == 0:
+    print("No new flats found")
+else:
+    # < ----- Activate Selenium ----- >
+    SELENIUM_DRIVER_PATH = os.environ.get("SELENIUM_DRIVER_PATH")
+    service = ChromeService(executable_path=SELENIUM_DRIVER_PATH)
+    chrome_options = Options()
+    chrome_options.add_experimental_option("detach", True)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
-# < ----- Open a form to fill ----- >
-driver.get(google_form)
-time.sleep(2)
+    # < ----- Open a form to fill ----- >
+    driver.get(google_form)
+    time.sleep(2)
 
-# < ----- Fill in the form with Selenium ----- >
-for i in range(len(prices)):
-    div = driver.find_element(by=By.CLASS_NAME, value="o3Dpx")
-    form_inputs = div.find_elements(By.TAG_NAME, "input")
-    for n in range(len(master_list)):
-        form_inputs[n].send_keys(master_list[n][i])
-    driver.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[3]/div[1]/div[1]/div/span/span').click()
-    time.sleep(1)
-    if i == len(prices) - 1:
-        pass
-    else:
-        driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div[1]/div/div[4]/a").click()
+    # < ----- Fill in the form with Selenium ----- >
+    for i in range(len(prices)):
+        div = driver.find_element(by=By.CLASS_NAME, value="o3Dpx")
+        form_inputs = div.find_elements(By.TAG_NAME, "input")
+        for n in range(len(master_list)):
+            form_inputs[n].send_keys(master_list[n][i])
+        driver.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[3]/div[1]/div[1]/div/span/span').click()
         time.sleep(1)
+        if i == len(prices) - 1:
+            pass
+        else:
+            driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div[1]/div/div[4]/a").click()
+            time.sleep(1)
 
-# < ----- Close Selenium ----- >
-driver.quit()
+    # < ----- Close Selenium ----- >
+    driver.quit()
